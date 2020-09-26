@@ -4,6 +4,7 @@
 
 library flutter_switch;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -32,10 +33,12 @@ class FlutterSwitch extends StatefulWidget {
     this.toggleSize = 25.0,
     this.valueFontSize = 16.0,
     this.borderRadius = 20.0,
-    this.padding = 4.0,
+    this.padding,
     this.showOnOff = false,
     this.activeText,
     this.inactiveText,
+    this.activeTextFontWeight,
+    this.inactiveTextFontWeight,
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(dragStartBehavior != null),
         super(key: key);
@@ -70,16 +73,30 @@ class FlutterSwitch extends StatefulWidget {
   ///
   /// Text value can be override by the [activeText] and
   /// [inactiveText] properties.
+  ///
+  /// Defaults to 'false' if no value was given.
   final bool showOnOff;
 
   /// The text to display when the switch is on.
+  /// This parameter is only necessary when [showOnOff] property is true.
   ///
   /// Defaults to 'On' if no value was given.
+  ///
+  /// To change value style, the following properties are available
+  ///
+  /// [activeTextColor] - The color to use on the text value when the switch is on.
+  /// [activeTextFontWeight] - The font weight to use on the text value when the switch is on.
   final String activeText;
 
   /// The text to display when the switch is off.
+  /// This parameter is only necessary when [showOnOff] property is true.
   ///
   /// Defaults to 'Off' if no value was given.
+  ///
+  /// To change value style, the following properties are available
+  ///
+  /// [inactiveTextColor] - The color to use on the text value when the switch is off.
+  /// [inactiveTextFontWeight] - The font weight to use on the text value when the switch is off.
   final String inactiveText;
 
   /// The color to use on the switch when the switch is on.
@@ -93,14 +110,28 @@ class FlutterSwitch extends StatefulWidget {
   final Color inactiveColor;
 
   /// The color to use on the text value when the switch is on.
+  /// This parameter is only necessary when [showOnOff] property is true.
   ///
   /// Defaults to [Colors.white70].
   final Color activeTextColor;
 
   /// The color to use on the text value when the switch is off.
+  /// This parameter is only necessary when [showOnOff] property is true.
   ///
   /// Defaults to [Colors.white70].
   final Color inactiveTextColor;
+
+  /// The font weight to use on the text value when the switch is on.
+  /// This parameter is only necessary when [showOnOff] property is true.
+  ///
+  /// Defaults to [FontWeight.w900].
+  final FontWeight activeTextFontWeight;
+
+  /// The font weight to use on the text value when the switch is off.
+  /// This parameter is only necessary when [showOnOff] property is true.
+  ///
+  /// Defaults to [FontWeight.w900].
+  final FontWeight inactiveTextFontWeight;
 
   /// The color to use on the toggle of the switch.
   ///
@@ -123,6 +154,7 @@ class FlutterSwitch extends StatefulWidget {
   final double toggleSize;
 
   /// The font size of the values of the switch.
+  /// This parameter is only necessary when [showOnOff] property is true.
   ///
   /// Defaults to a size of 16.0.
   final double valueFontSize;
@@ -168,90 +200,65 @@ class _FlutterSwitchState extends State<FlutterSwitch>
 
   @override
   Widget build(BuildContext context) {
+    String _activeText = '';
+    String _inactiveText = '';
+    FontWeight _activeTextFontWeight;
+    FontWeight _inactiveTextFontWeight;
+    double _padding;
+
+    _padding = (widget.padding != null) ? widget.padding : widget.width * 0.01;
+
+    if (widget.showOnOff) {
+      if (widget.value) {
+        _activeText = (widget.activeText != null) ? widget.activeText : 'On';
+        _inactiveText = '';
+      } else {
+        _inactiveText =
+            (widget.inactiveText != null) ? widget.inactiveText : 'Off';
+        _activeText = '';
+      }
+    }
+
+    _activeTextFontWeight = widget.activeTextFontWeight ?? FontWeight.w900;
+    _inactiveTextFontWeight = widget.inactiveTextFontWeight ?? FontWeight.w900;
+
     return FocusableActionDetector(
       actions: _actions,
       enabled: true,
       child: Builder(
         builder: (BuildContext context) {
-          return Stack(
-            children: [
-              _FlutterSwitchRenderObjectWidget(
-                dragStartBehavior: widget.dragStartBehavior,
-                value: widget.value,
-                onToggle: widget.onToggle,
-                activeColor: widget.activeColor,
-                inactiveColor: widget.inactiveColor,
-                toggleColor: widget.toggleColor,
-                width: widget.width,
-                height: widget.height,
-                toggleSize: widget.toggleSize,
-                borderRadius: widget.borderRadius,
-                padding: widget.padding,
-                configuration: createLocalImageConfiguration(context),
-                additionalConstraints: BoxConstraints.tight(
-                  Size(
-                    widget.width,
-                    widget.height,
-                  ),
-                ),
-                state: this,
+          return _FlutterSwitchRenderObjectWidget(
+            dragStartBehavior: widget.dragStartBehavior,
+            value: widget.value,
+            onToggle: widget.onToggle,
+            activeColor: widget.activeColor,
+            inactiveColor: widget.inactiveColor,
+            toggleColor: widget.toggleColor,
+            showOnOff: widget.showOnOff,
+            valueFontSize: widget.valueFontSize,
+            activeText: _activeText,
+            activeTextColor: widget.activeTextColor,
+            activeTextFontWeight: _activeTextFontWeight,
+            inactiveText: _inactiveText,
+            inactiveTextColor: widget.inactiveTextColor,
+            inactiveTextFontWeight: _inactiveTextFontWeight,
+            width: widget.width,
+            height: widget.height,
+            toggleSize: widget.toggleSize,
+            borderRadius: widget.borderRadius,
+            padding: _padding,
+            configuration: createLocalImageConfiguration(context),
+            additionalConstraints: BoxConstraints.tight(
+              Size(
+                widget.width,
+                widget.height,
               ),
-              Positioned(
-                left: 0,
-                top: (widget.height / 2.0) / 2.0,
-                child: Container(
-                    alignment: Alignment.centerLeft,
-                    width:
-                        widget.width - (widget.padding * 2) - widget.toggleSize,
-                    child: (widget.value) ? _activeText : SizedBox.shrink()),
-              ),
-              Positioned(
-                right: 10.0,
-                top: (widget.height / 2.0) / 2.0,
-                child: Container(
-                    alignment: Alignment.centerRight,
-                    width:
-                        widget.width - (widget.padding * 2) - widget.toggleSize,
-                    child: (!widget.value) ? _inactiveText : SizedBox.shrink()),
-              ),
-            ],
+            ),
+            state: this,
           );
         },
       ),
     );
-  }
-
-  Widget get _activeText {
-    if (widget.showOnOff) {
-      return Text(
-        (widget?.activeText != null) ? widget.activeText : "On",
-        style: TextStyle(
-          color: widget.activeTextColor,
-          fontWeight: FontWeight.w900,
-          fontSize: widget.valueFontSize,
-        ),
-        overflow: TextOverflow.ellipsis,
-      );
-    }
-
-    return Text("");
-  }
-
-  Widget get _inactiveText {
-    if (widget.showOnOff) {
-      return Text(
-        (widget?.inactiveText != null) ? widget.inactiveText : "Off",
-        style: TextStyle(
-          color: widget.inactiveTextColor,
-          fontWeight: FontWeight.w900,
-          fontSize: widget.valueFontSize,
-        ),
-        textAlign: TextAlign.right,
-        overflow: TextOverflow.ellipsis,
-      );
-    }
-
-    return Text("");
   }
 }
 
@@ -263,6 +270,14 @@ class _FlutterSwitchRenderObjectWidget extends LeafRenderObjectWidget {
     this.activeColor,
     this.inactiveColor,
     this.toggleColor,
+    this.showOnOff,
+    this.valueFontSize,
+    this.activeText,
+    this.activeTextColor,
+    this.activeTextFontWeight,
+    this.inactiveText,
+    this.inactiveTextColor,
+    this.inactiveTextFontWeight,
     this.width,
     this.height,
     this.toggleSize,
@@ -277,7 +292,15 @@ class _FlutterSwitchRenderObjectWidget extends LeafRenderObjectWidget {
   final ValueChanged<bool> onToggle;
   final Color activeColor;
   final Color inactiveColor;
+  final Color activeTextColor;
+  final Color inactiveTextColor;
   final Color toggleColor;
+  final bool showOnOff;
+  final String activeText;
+  final String inactiveText;
+  final FontWeight activeTextFontWeight;
+  final FontWeight inactiveTextFontWeight;
+  final double valueFontSize;
   final double width;
   final double height;
   final double toggleSize;
@@ -295,6 +318,14 @@ class _FlutterSwitchRenderObjectWidget extends LeafRenderObjectWidget {
       activeColor: activeColor,
       inactiveColor: inactiveColor,
       toggleColor: toggleColor,
+      showOnOff: showOnOff,
+      valueFontSize: valueFontSize,
+      activeText: activeText,
+      activeTextFontWeight: activeTextFontWeight,
+      inactiveText: inactiveText,
+      inactiveTextFontWeight: inactiveTextFontWeight,
+      activeTextColor: activeTextColor,
+      inactiveTextColor: inactiveTextColor,
       width: width,
       height: height,
       toggleSize: toggleSize,
@@ -315,6 +346,14 @@ class _FlutterSwitchRenderObjectWidget extends LeafRenderObjectWidget {
       ..activeColor = activeColor
       ..inactiveColor = inactiveColor
       ..toggleColor = toggleColor
+      ..showOnOff = showOnOff
+      ..valueFontSize = valueFontSize
+      ..activeText = activeText
+      ..activeTextFontWeight = activeTextFontWeight
+      ..inactiveText = inactiveText
+      ..inactiveTextFontWeight = inactiveTextFontWeight
+      ..activeTextColor = activeTextColor
+      ..inactiveTextColor = inactiveTextColor
       ..width = width
       ..height = height
       ..toggleSize = toggleSize
@@ -335,6 +374,14 @@ class _RenderSwitch extends RenderToggleable {
     Color activeColor,
     Color inactiveColor,
     Color toggleColor,
+    Color activeTextColor,
+    Color inactiveTextColor,
+    bool showOnOff,
+    String activeText,
+    String inactiveText,
+    FontWeight activeTextFontWeight,
+    FontWeight inactiveTextFontWeight,
+    double valueFontSize,
     double width,
     double height,
     double toggleSize,
@@ -346,12 +393,20 @@ class _RenderSwitch extends RenderToggleable {
     @required this.state,
   })  : assert(state != null),
         _toggleColor = toggleColor,
+        _activeTextColor = activeTextColor,
+        _inactiveTextColor = inactiveTextColor,
         _width = width,
         _height = height,
         _toggleSize = toggleSize,
         _borderRadius = borderRadius,
         _padding = padding,
         _configuration = configuration,
+        _showOnOff = showOnOff,
+        _valueFontSize = valueFontSize,
+        _activeText = activeText,
+        _activeTextFontWeight = activeTextFontWeight,
+        _inactiveText = inactiveText,
+        _inactiveTextFontWeight = inactiveTextFontWeight,
         super(
           value: value,
           tristate: false,
@@ -374,6 +429,78 @@ class _RenderSwitch extends RenderToggleable {
     assert(value != null);
     if (value == _toggleColor) return;
     _toggleColor = value;
+    markNeedsPaint();
+  }
+
+  Color get activeTextColor => _activeTextColor;
+  Color _activeTextColor;
+  set activeTextColor(Color value) {
+    if (showOnOff) assert(value != null);
+    if (value == _activeTextColor) return;
+    _activeTextColor = value;
+    markNeedsPaint();
+  }
+
+  Color get inactiveTextColor => _inactiveTextColor;
+  Color _inactiveTextColor;
+  set inactiveTextColor(Color value) {
+    if (showOnOff) assert(value != null);
+    if (value == _inactiveTextColor) return;
+    _inactiveTextColor = value;
+    markNeedsPaint();
+  }
+
+  bool get showOnOff => _showOnOff;
+  bool _showOnOff;
+  set showOnOff(bool value) {
+    assert(value != null);
+    if (value == _showOnOff) return;
+    _showOnOff = value;
+    markNeedsPaint();
+  }
+
+  double get valueFontSize => _valueFontSize;
+  double _valueFontSize;
+  set valueFontSize(double value) {
+    if (showOnOff) assert(value != null);
+    if (value == _valueFontSize) return;
+    _valueFontSize = value;
+    markNeedsPaint();
+  }
+
+  String get activeText => _activeText;
+  String _activeText;
+  set activeText(String value) {
+    if (showOnOff) assert(value != null);
+    if (value == _activeText) return;
+    _activeText = value;
+    markNeedsPaint();
+  }
+
+  String get inactiveText => _inactiveText;
+  String _inactiveText;
+  set inactiveText(String value) {
+    if (showOnOff) assert(value != null);
+    if (value == _inactiveText) return;
+    _inactiveText = value;
+    markNeedsPaint();
+  }
+
+  FontWeight get activeTextFontWeight => _activeTextFontWeight;
+  FontWeight _activeTextFontWeight;
+  set activeTextFontWeight(FontWeight value) {
+    if (showOnOff) assert(value != null);
+    if (value == _activeTextFontWeight) return;
+    _activeTextFontWeight = value;
+    markNeedsPaint();
+  }
+
+  FontWeight get inactiveTextFontWeight => _inactiveTextFontWeight;
+  FontWeight _inactiveTextFontWeight;
+  set inactiveTextFontWeight(FontWeight value) {
+    if (showOnOff) assert(value != null);
+    if (value == _inactiveTextFontWeight) return;
+    _inactiveTextFontWeight = value;
     markNeedsPaint();
   }
 
@@ -446,7 +573,7 @@ class _RenderSwitch extends RenderToggleable {
     _drag.dragStartBehavior = value;
   }
 
-  double get _switchLength => size.width - 2 * kRadialReactionRadius;
+  double get _switchLength => width - (2 * kRadialReactionRadius);
 
   HorizontalDragGestureRecognizer _drag;
 
@@ -526,9 +653,13 @@ class _RenderSwitch extends RenderToggleable {
 
     double visualPosition;
 
+    double smallSwitchHandler = (_switchLength < 20) ? 5 : 0;
+
     visualPosition = (value)
-        ? visualPosition = currentValue * _switchLength - padding
-        : visualPosition = currentValue * _switchLength;
+        ? visualPosition =
+            currentValue * _switchLength - padding + smallSwitchHandler
+        : visualPosition =
+            currentValue * _switchLength + padding - smallSwitchHandler;
 
     final Color switchColor = Color.lerp(
       inactiveColor,
@@ -538,9 +669,9 @@ class _RenderSwitch extends RenderToggleable {
 
     final Paint paint = Paint()..color = switchColor;
     final Rect switchRect = Rect.fromLTWH(
-      offset.dx - padding,
+      offset.dx,
       offset.dy,
-      width + padding,
+      width,
       height,
     );
 
@@ -557,9 +688,66 @@ class _RenderSwitch extends RenderToggleable {
       size.height / 2.0,
     );
 
+    // active text properties
+    final __activeText = TextSpan(
+      text: activeText,
+      style: TextStyle(
+        color: activeTextColor,
+        fontSize: valueFontSize,
+        fontWeight: activeTextFontWeight,
+      ),
+    );
+
+    final activeTextPainter = TextPainter(
+      text: __activeText,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.start,
+    );
+
+    activeTextPainter.layout(
+      minWidth: 0,
+      maxWidth: _switchLength,
+    );
+
+    final activeTextOffset = Offset(
+      offset.dx + kRadialReactionRadius - padding - 10,
+      offset.dy + ((size.height - activeTextPainter.height) / 2),
+    );
+
+    // inactive text properties
+    final __inactiveText = TextSpan(
+      text: inactiveText,
+      style: TextStyle(
+        color: inactiveTextColor,
+        fontSize: valueFontSize,
+        fontWeight: inactiveTextFontWeight,
+      ),
+    );
+
+    final inactiveTextPainter = TextPainter(
+      text: __inactiveText,
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.right,
+    );
+
+    inactiveTextPainter.layout(
+      minWidth: _switchLength - 2,
+      maxWidth: _switchLength - 2,
+    );
+
+    double inactiveTextOffsetMultiplier = (_switchLength <= 30.0) ? 1.10 : 0.5;
+
+    final inactiveTextOffset = Offset(
+      offset.dx + (_switchLength * inactiveTextOffsetMultiplier) - padding,
+      offset.dy + ((size.height - inactiveTextPainter.height) / 2),
+    );
+
     try {
       _isPainting = true;
       BoxPainter togglePainer;
+
+      activeTextPainter.paint(canvas, activeTextOffset);
+      inactiveTextPainter.paint(canvas, inactiveTextOffset);
 
       if (_cachedTogglePainter == null || toggleColor != _cachedToggleColor) {
         _cachedToggleColor = toggleColor;
